@@ -23,7 +23,7 @@ async function getSpreadsheet() {
 
     const spreadsheetId = "13mRfFj6yvU6BV_kA4n7hS8m5R5SVR5bJehzcoMtE7Bs";
     // currently my key, change this to Joe's
-    const apiKey = "AIzaSyDo-obYI2AzC9f_cFk9F22pbjGetDLSCQI";
+    const apiKey = "AIzaSyBEy3OQabheZOWCEAFEpsuk7gl4uMhmydo";
     const riddleUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?key=${apiKey}&includeGridData=true`;
     const spreadsheetResponse = await fetch(riddleUrl);
     const spreadsheetData = await spreadsheetResponse.json();
@@ -54,6 +54,7 @@ function addInputs(parentDiv, answer) {
     parentDiv.appendChild(userInput);
 }
 
+// TODO: add favicon, update puzzle based on day, formatting, timer count up
 window.onload = async function() {
     const spreadsheetRows = await getSpreadsheet();
     const dailyRow = spreadsheetRows[dailyRiddleIndex()].values.map((cell) => cell.formattedValue);
