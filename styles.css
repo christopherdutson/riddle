@@ -46,3 +46,10 @@ input {
 i {
     color: green
 }
+
+/* For Mobile */
+@media (max-width: 750px) {
+    #main {
+        width: 100%;
+    }
+}
