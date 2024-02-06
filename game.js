@@ -62,17 +62,13 @@ class Game {
 
 const millisToDays = 1000 * 60 * 60 * 24;
 
-function setCookieValue(key, value) {
-    return `${key}=${value};`;
-}
-
-function makeCookie(valueString) {
+function makeCookie(key, value) {
     // cookie will expire in a year
     let d = new Date();
     d.setTime(d.getTime() + (365*millisToDays));
     let expires = " expires="+ d.toUTCString();
     let path = " path=/"; // TODO: do I need this?
-    document.cookie = valueString + expires + ';' + path;
+    document.cookie = `${key}=${value};${expires};${path}`;
 }
 
 function formatTime(time) {
@@ -220,8 +216,9 @@ window.onload = async function() {
     const spreadsheetRows = await getGoogleSpreadsheet();
     const titleRow = spreadsheetRows[0].values.map((cell) => cell.formattedValue);
     const dailyRow = spreadsheetRows[dailyRiddleIndex].values.map((cell) => cell.formattedValue);
-    const values = setCookieValue("totalTime", "500") + setCookieValue("totalWinz", "5");
-    makeCookie(values);
+    // const values = setCookieValue("totalTime", "500") + setCookieValue("totalWinz", "5");
+    makeCookie("totalTime", "500");
+    makeCookie("totalWinz", "5");
     const game = new Game(titleRow, dailyRow);
     console.log(game);
     var mainDiv = document.getElementById("main");
