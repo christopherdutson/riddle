@@ -34,15 +34,12 @@ class Game {
 
     parseCookies() {
         const pastData = document.cookie;
-
-        console.log(pastData);
         const dataPairs = pastData.split('; ');
         let cookies = {};
         dataPairs.forEach((pair) => {
             let vals = pair.split('=');
             cookies[vals[0]] = vals[1];
         });
-        console.log(cookies);
         this.totalTime = parseInt(cookies['totalTime'] ?? 0);
         this.totalWins = parseInt(cookies['totalWins'] ?? 0);
         this.lastWinTime =  parseInt(cookies['lastWinTime'] ?? 0);
@@ -214,11 +211,7 @@ window.onload = async function() {
     const spreadsheetRows = await getGoogleSpreadsheet();
     const titleRow = spreadsheetRows[0].values.map((cell) => cell.formattedValue);
     const dailyRow = spreadsheetRows[dailyRiddleIndex].values.map((cell) => cell.formattedValue);
-    // const values = setCookieValue("totalTime", "500") + setCookieValue("totalWinz", "5");
-    makeCookie("totalTime", "500");
-    makeCookie("totalWinz", "5");
     const game = new Game(titleRow, dailyRow);
-    console.log(game);
     var mainDiv = document.getElementById("main");
 
     game.riddles.forEach((riddle) => {
