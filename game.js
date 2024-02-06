@@ -36,17 +36,16 @@ class Game {
         const pastData = document.cookie;
 
         console.log(pastData);
-        console.log(decodeURIComponent(pastData));
-        const dataPairs = decodeURIComponent(pastData).split(';');
+        const dataPairs = pastData.split('; ');
         let cookies = {};
         dataPairs.forEach((pair) => {
             let vals = pair.split('=');
             cookies[vals[0]] = vals[1];
         });
         console.log(cookies);
-        this.totalTime = cookies['totalTime'] ?? 0;
-        this.totalWins = cookies['totalWins'] ?? 0;
-        this.lastWinTime = cookies['lastWinTime'];
+        this.totalTime = parseInt(cookies['totalTime'] ?? 0);
+        this.totalWins = parseInt(cookies['totalWins'] ?? 0);
+        this.lastWinTime =  parseInt(cookies['lastWinTime'] ?? 0);
     }
 
     checkWin() {
@@ -85,26 +84,25 @@ function updateTime(time) {
     document.getElementById("timer").innerText = "Timer: " + formatTime(time);
 }
 
-function gameWon(time) {
+function gameWon(game) {
     const timerElement = document.getElementById("timer");
-    timerElement.innerText = "You did it! Game won in: " + formatTime(time) + " (click to share)";
+    timerElement.innerText = "You did it! Game won in: " + formatTime(game.timer) + " (click to share)";
     timerElement.addEventListener('click', function() {
-        navigator.clipboard.writeText("I completed the daily rhyme in " + formatTime(time) + "!");
+        navigator.clipboard.writeText("I completed the daily rhyme in " + formatTime(game.timer) + "!");
     });
 
-    let averageTime = "averageTime=" + formatTime(time);
-    // cookie will expire in a year
-    let d = new Date();
-    d.setTime(d.getTime() + (365*millisToDays));
-    let expires = " expires="+ d.toUTCString();
-    let path = " path=/"; // do I need this?
-    document.cookie = averageTime + expires + path;
+    game.totalWins += 1;
+    game.totalTime += game.timer;
+    const winTime = "You won in: " + formatTime(game.timer) + "\n";
+    const lastTime = game.lastWinTime > 0 ? "Last Win in: " + formatTime(game.lastWinTime) + "\n" : "";
+    const totalWins = "Total games won: " + game.totalWins + "\n";
+    const averageTime = "Average time: " + formatTime(game.totalTime / game.totalWins);
 
     // TODO: maybe wait so icon can have time to change
-    // if(confirm("Completed in " + formatTime(time))) {
-    //     // navigator.clipboard.writeText("testing this");
-    //     console.log("copied");
-    // }
+    alert(winTime + lastTime + totalWins + averageTime);
+    makeCookie("totalTime", game.totalTime);
+    makeCookie("totalWins", game.totalWins);
+    makeCookie("lastWinTime", game.timer);
 }
 
 function startTimer(game) {
@@ -164,7 +162,7 @@ function addGuessInput(parentDiv, riddle, isFirst, game) {
             button.replaceWith(icon);
             isFirst ? riddle.guessedFirst = true : riddle.guessedSecond = true;
             if (game.checkWin()) {
-                gameWon(game.timer);
+                gameWon(game);
             }
         }
         // incorrect guess
