@@ -11,8 +11,11 @@ class Riddle {
 
 class Game {
     constructor(titleRow, dailyRow) {
-        this.parseCookies();
-
+        // these values will be overriden if cookies are found
+        this.totalTime = 0;
+        this.totalWins = 0;
+        this.lastWinTime = undefined;
+        
         // time used in milliseconds
         this.timer = 0;
         this.timerRunning = undefined;
@@ -26,16 +29,10 @@ class Game {
             const secondWord = this.dailyRow[index+2];
             return new Riddle(label, clue, firstWord, secondWord);
         });
+        this.parseCookies();
     }
 
     parseCookies() {
-        let averageTime = "totalTime=" + 100;
-        // cookie will expire in a year
-        let d = new Date();
-        d.setTime(d.getTime() + (365*millisToDays));
-        let expires = " expires="+ d.toUTCString();
-        let path = " path=/"; // do I need this?
-        document.cookie = averageTime + ';' + expires + ';' + path;
         const pastData = document.cookie;
 
         console.log(pastData);
@@ -47,6 +44,9 @@ class Game {
             cookies[vals[0]] = vals[1];
         });
         console.log(cookies);
+        this.totalTime = cookies['totalTime'] ?? 0;
+        this.totalWins = cookies['totalWins'] ?? 0;
+        this.lastWinTime = cookies['lastWinTime'];
     }
 
     checkWin() {
@@ -61,6 +61,19 @@ class Game {
 }
 
 const millisToDays = 1000 * 60 * 60 * 24;
+
+function setCookieValue(key, value) {
+    return `${key}=${value};`;
+}
+
+function makeCookie(valueString) {
+    // cookie will expire in a year
+    let d = new Date();
+    d.setTime(d.getTime() + (365*millisToDays));
+    let expires = " expires="+ d.toUTCString();
+    let path = " path=/"; // TODO: do I need this?
+    document.cookie = valueString + expires + ';' + path;
+}
 
 function formatTime(time) {
     const totalSeconds = Math.floor(time / 1000);
@@ -77,7 +90,11 @@ function updateTime(time) {
 }
 
 function gameWon(time) {
-    document.getElementById("timer").innerText = "You did it! Game won in: " + formatTime(time);
+    const timerElement = document.getElementById("timer");
+    timerElement.innerText = "You did it! Game won in: " + formatTime(time) + " (click to share)";
+    timerElement.addEventListener('click', function() {
+        navigator.clipboard.writeText("I completed the daily rhyme in " + formatTime(time) + "!");
+    });
 
     let averageTime = "averageTime=" + formatTime(time);
     // cookie will expire in a year
@@ -88,10 +105,10 @@ function gameWon(time) {
     document.cookie = averageTime + expires + path;
 
     // TODO: maybe wait so icon can have time to change
-    if(confirm("Completed in " + formatTime(time))) {
-        // navigator.clipboard.writeText("testing this");
-        console.log("copied");
-    }
+    // if(confirm("Completed in " + formatTime(time))) {
+    //     // navigator.clipboard.writeText("testing this");
+    //     console.log("copied");
+    // }
 }
 
 function startTimer(game) {
@@ -203,7 +220,10 @@ window.onload = async function() {
     const spreadsheetRows = await getGoogleSpreadsheet();
     const titleRow = spreadsheetRows[0].values.map((cell) => cell.formattedValue);
     const dailyRow = spreadsheetRows[dailyRiddleIndex].values.map((cell) => cell.formattedValue);
+    const values = setCookieValue("totalTime", "500") + setCookieValue("totalWinz", "5");
+    makeCookie(values);
     const game = new Game(titleRow, dailyRow);
+    console.log(game);
     var mainDiv = document.getElementById("main");
 
     game.riddles.forEach((riddle) => {
