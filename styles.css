@@ -43,12 +43,8 @@ input {
     width: 60px;
 }
 
-i {
-    color: green
-}
-
 /* For Mobile */
-@media (max-width: 750px) {
+@media (max-width: 800px) {
     #main {
         width: 100%;
     }

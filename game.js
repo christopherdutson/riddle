@@ -11,6 +11,8 @@ class Riddle {
 
 class Game {
     constructor(titleRow, dailyRow) {
+        this.parseCookies();
+
         // time used in milliseconds
         this.timer = 0;
         this.timerRunning = undefined;
@@ -26,6 +28,27 @@ class Game {
         });
     }
 
+    parseCookies() {
+        let averageTime = "totalTime=" + 100;
+        // cookie will expire in a year
+        let d = new Date();
+        d.setTime(d.getTime() + (365*millisToDays));
+        let expires = " expires="+ d.toUTCString();
+        let path = " path=/"; // do I need this?
+        document.cookie = averageTime + ';' + expires + ';' + path;
+        const pastData = document.cookie;
+
+        console.log(pastData);
+        console.log(decodeURIComponent(pastData));
+        const dataPairs = decodeURIComponent(pastData).split(';');
+        let cookies = {};
+        dataPairs.forEach((pair) => {
+            let vals = pair.split('=');
+            cookies[vals[0]] = vals[1];
+        });
+        console.log(cookies);
+    }
+
     checkWin() {
         for(const riddle of this.riddles) {
             if(!riddle.guessedFirst || !riddle.guessedSecond) {
@@ -36,6 +59,8 @@ class Game {
         return true;
     }
 }
+
+const millisToDays = 1000 * 60 * 60 * 24;
 
 function formatTime(time) {
     const totalSeconds = Math.floor(time / 1000);
@@ -53,6 +78,20 @@ function updateTime(time) {
 
 function gameWon(time) {
     document.getElementById("timer").innerText = "You did it! Game won in: " + formatTime(time);
+
+    let averageTime = "averageTime=" + formatTime(time);
+    // cookie will expire in a year
+    let d = new Date();
+    d.setTime(d.getTime() + (365*millisToDays));
+    let expires = " expires="+ d.toUTCString();
+    let path = " path=/"; // do I need this?
+    document.cookie = averageTime + expires + path;
+
+    // TODO: maybe wait so icon can have time to change
+    if(confirm("Completed in " + formatTime(time))) {
+        // navigator.clipboard.writeText("testing this");
+        console.log("copied");
+    }
 }
 
 function startTimer(game) {
@@ -91,21 +130,42 @@ function makeButton() {
     return button;
 }
 
-function addInputs(parentDiv, riddle, isFirst, game) {
+/**
+ * Create the input and button for a word in a rhyme. 
+ * @param {HTMLElement} parentDiv the div that the input will be appended to 
+ * @param {Riddle} riddle the riddle object associated with the input being created
+ * @param {boolean} isFirst set to true if making the input for the first word
+ */
+function addGuessInput(parentDiv, riddle, isFirst, game) {
     var button = makeButton();
     var userInput = document.createElement("input");
     userInput.setAttribute("type", "text")
     button.addEventListener('click', function() {
         var inputText = userInput.value;
         const answer = isFirst ? riddle.firstWord : riddle.secondWord;
+        // correct guess
         if(sanitize(inputText) == sanitize(answer)) { 
             var icon = document.createElement("i");
             icon.classList.add("fa", "fa-check");
+            icon.style.color = "green";
             button.replaceWith(icon);
             isFirst ? riddle.guessedFirst = true : riddle.guessedSecond = true;
             if (game.checkWin()) {
                 gameWon(game.timer);
             }
+        }
+        // incorrect guess
+        else {
+            var icon = document.createElement("i");
+            icon.classList.add("fa", "fa-times");
+            icon.style.color = "red";
+            button.replaceWith(icon);
+            const listener = setInterval(function() {
+                if(inputText != userInput.value) {
+                    icon.replaceWith(button);
+                    clearInterval(listener);
+                }
+            }, 2000);
         }
     }); 
     parentDiv.appendChild(button);
@@ -124,17 +184,16 @@ function makeRiddleDiv(riddle, game) {
 
     var rightDiv = document.createElement("div");
     rightDiv.classList.add("column");
-    addInputs(rightDiv, riddle, true, game);
-    addInputs(rightDiv, riddle, false, game);
+    addGuessInput(rightDiv, riddle, true, game);
+    addGuessInput(rightDiv, riddle, false, game);
 
     rowDiv.appendChild(leftDiv);
     rowDiv.appendChild(rightDiv);
     return rowDiv;
 }
 
-// TODO polish: add favicon, formatting, enter should submit, figure out api key, phone usable, font
+// TODO polish: add favicon, formatting, enter should submit, figure out api key, phone usable, font, track if puzzle already won today
 window.onload = async function() {
-    const millisToDays = 1000 * 60 * 60 * 24;
     // Starting day is Jan 13 2024
     const puzzleStartDate = new Date(2024, 0, 13, 0);
     const today = Date.now();
@@ -147,7 +206,6 @@ window.onload = async function() {
     const game = new Game(titleRow, dailyRow);
     var mainDiv = document.getElementById("main");
 
-    // Add riddle rows
     game.riddles.forEach((riddle) => {
         mainDiv.appendChild(makeRiddleDiv(riddle, game));
     });
