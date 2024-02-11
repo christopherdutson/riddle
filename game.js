@@ -203,7 +203,7 @@ function makeRiddleDiv(riddle, game) {
 // TODO polish: add favicon, formatting, enter should submit, figure out api key, phone usable, font, track if puzzle already won today
 window.onload = async function() {
     // Starting day is Jan 13 2024
-    const puzzleStartDate = new Date(2024, 0, 13, 0);
+    const puzzleStartDate = new Date(2024, 1, 9, 0);
     const today = Date.now();
     const rowOffset = 1;
     const dailyRiddleIndex = Math.floor((today - puzzleStartDate) / millisToDays) + rowOffset;
